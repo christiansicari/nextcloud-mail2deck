@@ -1,0 +1,6 @@
+venv/
+.idea/
+__pycache__/
+/comune.config.json
+/fcrlab.config.json
+/config.json

@@ -1,0 +1,13 @@
+{
+    "NC_SERVER": "https://nextcloud.com/nextcloud",
+    "NC_USER": "deckbot",
+    "NC_PASSWORD": "deck",
+    "DEFAULT_BOARD": "Nextcloud",
+    "DEFAULT_STACK": "mail",
+    "EMAIL": "deck@gmail.com",
+    "PASSWORD": "deck" ,
+    "DOMAIN": "imap.gmail.com",
+    "ALLOWED_FILES": ["pdf", "png", "jpg", "jpeg", "docx", "doc", "xlsx", "xls", "txt"],
+    "MAX_PROCESSED_MAIL": 10,
+    "LOGGING_LEVEL": 10
+}
