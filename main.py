@@ -71,8 +71,8 @@ def get_card_headers(nc, msg, default_stack, default_board_id, default_stack_id)
     return board_id, stack_id, subject
 
 
-def get_messages(server, login, password, limit):
-    mb = MailBox(server).login(login, password)
+def get_messages(server, login, password, folder, limit):
+    mb = MailBox(server).login(login, password, initial_folder=folder)
     emails = mb.fetch(criteria=AND(seen=False), mark_seen=True, bulk=True, limit=limit)
     return emails
 
@@ -82,6 +82,7 @@ def enrich_card_description(msg):
     body = body if body else msg.text
     header = f'''**From:** {msg.from_}  
     **Date:** {msg.date_str}  
+    **To:** {",".join(msg.to)}  
     --------------------------------------------------------  
     '''
     description = f'''{header}
@@ -144,7 +145,7 @@ def start():
         default_board_id = nc.board_name_to_id(cfg["DEFAULT_BOARD"])
         default_stack_id = nc.stack_name_to_id(default_board_id, cfg["DEFAULT_STACK"])
         try:
-            messages = get_messages(cfg["DOMAIN"], cfg["EMAIL"], cfg["PASSWORD"], max_emails)
+            messages = get_messages(cfg["DOMAIN"], cfg["EMAIL"], cfg["PASSWORD"], cfg["FOLDERMAIL"], max_emails)
             elaborate_messages(cfg, nc, default_board_id, default_stack_id, messages)
         except Exception as e:
             logger.error(e)
