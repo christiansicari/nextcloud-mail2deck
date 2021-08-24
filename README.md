@@ -35,7 +35,7 @@ crontab -e
 ```
 add this line
 ```
-#*/5 * * * *  /usr/bin/python3 /path/to/repo/main.py
+*/5 * * * *  /usr/bin/python3 /path/to/repo/main.py
 ```
 
 ## Docker Version
@@ -55,7 +55,7 @@ crontab -e
 ```
 add this line
 ```
-#*/5 * * * *  /usr/bin/docker start nc-mail2deck
+*/5 * * * *  /usr/bin/docker start nc-mail2deck
 ```
 
 ## How it works
