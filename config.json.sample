@@ -9,6 +9,6 @@
     "DOMAIN": "imap.gmail.com",
     "ALLOWED_FILES": ["pdf", "png", "jpg", "jpeg", "docx", "doc", "xlsx", "xls", "txt"],
     "MAX_PROCESSED_MAIL": 10,
-    "LOGGING_LEVEL": 10
+    "LOGGING_LEVEL": 10,
     "FOLDERMAIL": "INBOX"
 }
