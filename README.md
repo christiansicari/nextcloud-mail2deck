@@ -37,6 +37,27 @@ add this line
 ```
 #*/5 * * * *  /usr/bin/python3 /path/to/repo/main.py
 ```
+
+## Docker Version
+Pull the image from the Docker Hub
+```
+docker image pull  christiansicari/nextcloud-mail2deck:latest
+```
+edit the config.json.sample you find in this repository
+
+Run the docker image mapping the config.json as volume
+```
+docker run -d --name nc-mail2deck -v $PWD/config.json:/app/config.json christiansicari/nextcloud-mail2deck:latest
+```
+edit cron
+```
+crontab -e
+```
+add this line
+```
+#*/5 * * * *  /usr/bin/docker start nc-mail2deck
+```
+
 ## How it works
 
 1. The script reads at most 10 unseen emails per time (and mark as seen);
