@@ -73,9 +73,9 @@ def get_card_headers(nc, msg, default_stack, default_board_id, default_stack_id)
 def get_messages(server, login, password, folder, limit):
     mb = MailBox(server).login(login, password, initial_folder=folder)
     # in production
-    #emails = mb.fetch(criteria=AND(seen=False), mark_seen=True, bulk=True, limit=limit)
+    emails = mb.fetch(criteria=AND(seen=False), mark_seen=True, bulk=True, limit=limit)
     # in testing
-    emails = mb.fetch(criteria=AND(flagged=True), mark_seen=True, bulk=True, limit=limit)
+    #emails = mb.fetch(criteria=AND(flagged=True), mark_seen=True, bulk=True, limit=limit)
     return emails
 
 
