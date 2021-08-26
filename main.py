@@ -6,7 +6,6 @@ import logging
 from NextcloudClient import NextcloudClient as NC
 from sys import argv
 from os.path import join, realpath, dirname
-
 this = dirname(realpath(__file__))
 
 
@@ -73,7 +72,10 @@ def get_card_headers(nc, msg, default_stack, default_board_id, default_stack_id)
 
 def get_messages(server, login, password, folder, limit):
     mb = MailBox(server).login(login, password, initial_folder=folder)
-    emails = mb.fetch(criteria=AND(seen=False), mark_seen=True, bulk=True, limit=limit)
+    # in production
+    #emails = mb.fetch(criteria=AND(seen=False), mark_seen=True, bulk=True, limit=limit)
+    # in testing
+    emails = mb.fetch(criteria=AND(flagged=True), mark_seen=True, bulk=True, limit=limit)
     return emails
 
 
@@ -90,31 +92,68 @@ def enrich_card_description(msg):
     return description
 
 
-def convert_mail(nc, msg, allowed_extensions, default_stack, default_board_id, default_stack_id):
+def user_mail_to_id(nc, mail):
+    if mail not in USERS:
+        try:
+            USERS[mail] = nc.search_users(mail)  # this is an array
+            if len(USERS[mail]) == 0:
+                logger.warning(f"No user found for mail {mail}")
+            else:
+                logger.debug(f'mail {mail} userId: {USERS[mail]}')
+        except Exception as e:
+            logger.warning(f"Error searching users with mail {mail}: {e}")
+            USERS[mail] = []
+
+    return USERS[mail]
+
+
+def convert_mail(nc, msg, allowed_extensions, default_stack, default_board_id, default_stack_id, excluded_assignees):
     description = enrich_card_description(msg)
     attachments = {att.filename: att.payload for att in msg.attachments if att.filename.endswith(allowed_extensions)}
     logger.info(f"Message from: {msg.from_} - subject: {msg.subject}\n Allowed attachments: {len(attachments)}")
     board_id, stack_id, subject = get_card_headers(nc, msg, default_stack, default_board_id, default_stack_id)
-    card = dict(title=subject, description=description, type="plain", order=999)
-    return dict(card=card, attachments=attachments, stack_id=stack_id, board_id=board_id)
+    card = dict(title=subject, description=description, type="plain", order=1)
+    assignees = set()
+    for mail in set(msg.to) - set(excluded_assignees):
+        users_id = user_mail_to_id(nc, mail)  # an email could have many users
+        if users_id:
+            assignees = assignees.union(set(users_id))
+    return dict(card=card, attachments=attachments, stack_id=stack_id, board_id=board_id, assignees=assignees)
+
+
+def add_attachments(nc, board_id, stack_id, card_id, attachments):
+    counter = 0
+    for filename, file in attachments.items():
+        try:
+            nc.add_card_attachment(board_id, stack_id, card_id, filename, file)
+            counter += 1
+        except Exception as e:
+            logger.error(e)
+            logger.error("Not possible load attachment")
+    logger.info(f"Loaded attachments {counter}/{len(attachments)}")
+
+
+def add_assignees(nc, board_id, stack_id, card_id, assignees):
+    counter = 0
+    for assignee in assignees:
+        try:
+            nc.assign_card(board_id, stack_id, card_id, assignee)
+            counter += 1
+        except Exception as e:
+            logger.warning(f"Unable to assign card to user_id {assignee}: {e}")
+    logger.info(f'Card assigned to {counter}/{len(assignees)} users')
 
 
 def elaborate_messages(cfg, nc, default_board_id, default_stack_id, messages):
     for message in messages:
         try:
-            data = convert_mail(nc, message, tuple(cfg["ALLOWED_FILES"]), cfg["DEFAULT_STACK"], default_board_id, default_stack_id)
+            data = convert_mail(nc, message, tuple(cfg["ALLOWED_FILES"]), cfg["DEFAULT_STACK"], default_board_id,
+                                default_stack_id, {cfg["EMAIL"]})
             try:
                 card_id = nc.create_card(data["board_id"], data["stack_id"], data["card"])
                 logger.info(f"Card created {card_id}")
-                attach_loaded = 0
-                for filename, file in data["attachments"].items():
-                    try:
-                        nc.add_card_attachment(data["board_id"], data["stack_id"], card_id, filename, file)
-                        attach_loaded += 1
-                    except Exception as e:
-                        logger.error(e)
-                        logger.error("Not possible load attachment")
-                logger.info(f"Loaded attachments {attach_loaded}/{len(data['attachments'])}")
+                add_attachments(nc, data["board_id"], data["stack_id"], card_id, data["attachments"])
+                add_assignees(nc, data["board_id"], data["stack_id"], card_id, data["assignees"])
             except Exception as e:
                 logger.error(e)
                 logger.error("Unable to store the card")
@@ -122,7 +161,6 @@ def elaborate_messages(cfg, nc, default_board_id, default_stack_id, messages):
         except Exception as e:
             logger.error(e)
             logger.error("Unable to convert the email to a card")
-
 
 
 def init():
@@ -157,5 +195,6 @@ def start():
 
 
 logger = get_logger()
+USERS = {}
 if __name__ == '__main__':
     start()

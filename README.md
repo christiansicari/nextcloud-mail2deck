@@ -1,7 +1,8 @@
 # Nextcloud mail2deck Python version
 Acknowledgments: https://github.com/newroco/mail2deck
 
-This script allows fetching emails from a mail client and save them as cards in Nextcloud Deck App
+This script allows fetching emails from a mail client and save them as cards in Nextcloud Deck App, eventually assigning
+the card to the proper users
  ## Requirements
 *  Python 3.9+
 * Nextcloud and Deck APP installed
@@ -67,15 +68,29 @@ add this line
     3. try to create the card on Nextcloud
     4. for each attachment in the mail
          1. it tries to upload it in Nextcloud
+    5. for each assignees:
+         1. find all users ID with this email (could be more than one)
+         2. try to assignee the card to each user_id
+    
 
-
-### Hot to get board and stack
+### How to set board and stack
 You can specify board and/or stack in the mail subject, using this model:
 ```
 b-'theboardname's-'thestackname'Card description
 ```
+
+### How to set the assignees:
+Just put the assignee mail (that must be registered in Nextcloud) in the TO mail.
+The mail in the config file will be automatic excluded
+
+## Notes
+The script will be not able to assign the card to any user if the bot user in the config is not
+admin or sub-admin.
+If you use LDAP, you need to set the mail field as a searchable field
+ettings -> LDAP Integration -> Advanced -> Directory Settings ->User Search Attributes
+
+
 ### Policies
-#### Providing Board and Card
 * Provide board and card in subject
     * Board and card exists &#8594; Card is stored in the provided board and card
     * Board only exists

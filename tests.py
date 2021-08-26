@@ -1,10 +1,13 @@
-from imap_tools import MailBox, AND
+import requests
 
-# get list of email subjects from INBOX folder
-mb = MailBox('imap.gmail.com').login('deckbot.nextcloud@gmail.com', 'Deckgmailfcrl4b@')
-emails = mb.fetch(criteria=AND(seen=False), mark_seen=True, bulk=True, limit=10)
-for email in emails:
-    print(email.subject)
-# get list of email subjects from INBOX folder - equivalent verbose version
+url = "https://nc.me.pi2s2.it/nextcloud/ocs/v1.php/cloud/users?search=csicari@unime.it"
 
+payload={}
+headers = {
+  'OCS-APIRequest': 'true',
+  'Accept': 'application/json',
+}
 
+response = requests.request("GET", url, auth=('deckbot', 'Deckbotfcrl4b@'), headers=headers, data=payload)
+
+print(response.text)

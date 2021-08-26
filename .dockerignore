@@ -4,3 +4,4 @@ __pycache__/
 /comune.config.json
 /fcrlab.config.json
 /config.json
+/tests.py
